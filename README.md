@@ -1,6 +1,7 @@
 # pitd_insert
 
 insert PIOMAS ITD into GEOS5 sea ice restart
+only works with GEOS-5 style sea ice (thermo) restart files 
 
 ## there are 2 versions:
 
