@@ -104,12 +104,13 @@ class saltwatertile:
                n2 = n
                break
        #print n2
-       icetile=tile[n1-1:]
+       icetile=tile[n1-1:n2-1]
        #print icetile.shape
        #print 'hhh: ',icetile[0][2], icetile[-1][2]
        self.size = icetile.shape[0]
        self.gi = icetile['gi2'][:]
        self.gj = icetile['gj2'][:]
+       print 'hhh: ',self.size,self.gi[-1],self.gj[-1]
        #return icetile
 
 
@@ -149,25 +150,13 @@ def lon_lat_to_cartesian(lon, lat, R = 1):
     return x,y,z
 
 
-def get_grid(atm, ocn): #reads lat lon for tripolar ocean grid 
-    print atm, ocn 
-    ##ncfile=Dataset('/gpfsm/dnb42/projects/p17/gvernier/SAND_BOXES/PLOT_ODAS/DATA/grid_spec_720x410x40.nc', "r")
-    #ncfile=Dataset('/discover/nobackup/yvikhlia/coupled/Forcings/Ganymed/a90x540_o720x410/INPUT/grid_spec.nc',"r")
-    #ncfile=Dataset('/gpfsm/dnb02/projects/p23/bzhao/s2s3-duoc04/scratch/INPUT/grid_spec.nc',"r")
-    if ocn=='1440x1080':
-       ncfile = Dataset('/discover/nobackup/yvikhlia/coupled/Forcings/a'+atm+'_o'+ocn+'.newtile/INPUT/grid_spec.nc', "r")
-    elif ocn == '360x210' or ocn == '360x320':
-       ncfile = Dataset('/discover/nobackup/yvikhlia/coupled/Forcings/MOM6/'+'CF'+atm.split('x')[0].zfill(4)+'x6C_TM'+ocn.split('x')[0].zfill(4)+'xTM'+ocn.split('x')[1].zfill(4)+'/MAPL_Tripolar.nc', "r")
-    else:
-       ncfile = Dataset('/discover/nobackup/yvikhlia/coupled/Forcings/a'+atm+'_o'+ocn+'/INPUT/grid_spec.nc', "r")
-    if ocn == '360x210' or ocn == '360x320':
-       LON     = ncfile.variables['lon_centers'][:]
-       LAT     = ncfile.variables['lat_centers'][:]
-       numlev   = ncfile.variables['lev'][:]
-    else:
-       LON     = ncfile.variables['x_T'][:]
-       LAT     = ncfile.variables['y_T'][:]
-       numlev     = ncfile.variables['num_levels'][:]
+def get_grid(mapl_tripole): #reads lat lon for tripolar ocean grid 
+    #print atm, ocn 
+    ncfile=Dataset(mapl_tripole,"r")
+
+    LON     = ncfile.variables['lon_centers'][:]
+    LAT     = ncfile.variables['lat_centers'][:]
+    numlev   = ncfile.variables['mask'][:]
     ncfile.close()
 
     return LON, LAT, numlev
@@ -298,7 +287,7 @@ hicepm = np.sum(hicepm, axis=0)
 
 
 sw = saltwatertile(tilefile)
-LON, LAT, numlevels = get_grid(sw.atm, sw.ocn)
+LON, LAT, numlevels = get_grid(sys.argv[6])
 
 with Dataset(icein) as src, Dataset(iceout, "w") as dst:
     # copy global attributes all at once via dictionary
@@ -347,6 +336,7 @@ with Dataset(icein) as src, Dataset(iceout, "w") as dst:
     print("Elapsed (interplating to tripolar) = %s" % (end - start))
     indi = sw.gi[:]-1 
     indj = sw.gj[:]-1   
+    print indi.max(), indj.max()
     ind = np.array(range(sw.size))
 
     indis = indi[LAT[indj,indi]>lat_cutoff]
@@ -473,7 +463,7 @@ x, y =m(clon,clat)
 #fbot = ma.masked_where(outside, fbot)
 #m.pcolormesh(x,y,hice,cmap=cmp,vmin=0.0, vmax=4.0)
 levl = 0 #m.pcolormesh(x,y,hice,cmap=cmp,vmin=-2, vmax=2)
-m.pcolormesh(x,y,hicepm,cmap=cmp,vmin=0.0, vmax=4.0)
+m.pcolormesh(x,y,hicepm,cmap=cmp,vmin=0.0, vmax=5.0)
 #m.pcolormesh(x,y,hice[levl],cmap=cmp,vmin=0.0, vmax=4.0)
 
 #m.pcolormesh(x,y,hice,cmap=cmp,vmin=250, vmax=280)
